@@ -96,7 +96,7 @@ fi
 
 if [ "$INSTALL_TYPE" != "use_pools" ];then 
     # 2.3 Create the boot pool
-    zpool create -o ashift=12 -d \
+    zpool create -o ashift=13 -d \
         -o feature@async_destroy=enabled \
         -o feature@bookmarks=enabled \
         -o feature@embedded_data=enabled \
@@ -125,14 +125,14 @@ if [ "$INSTALL_TYPE" != "use_pools" ];then
         apt install --yes cryptsetup
         cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha256 "$ROOT_PART"
         cryptsetup luksOpen "$ROOT_PART" luks1
-        zpool create -o ashift=12 \
+        zpool create -o ashift=13 \
             -O acltype=posixacl -O canmount=off -O compression=lz4 \
             -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa \
             -O mountpoint=/ -R /mnt \
             "${ROOT_POOL_NAME}" /dev/mapper/luks1
     elif [ "$ZFS_CRYPT" == "yes" ]; then
         # 2.4c  ZFS native encryption
-        zpool create -o ashift=12 \
+        zpool create -o ashift=13 \
             -O acltype=posixacl -O canmount=off -O compression=lz4 \
             -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa \
             -O encryption=aes-256-gcm -O keylocation=prompt -O keyformat=passphrase \
@@ -140,7 +140,7 @@ if [ "$INSTALL_TYPE" != "use_pools" ];then
             "${ROOT_POOL_NAME}" "$ROOT_PART"
     else
         # 2.4a Unencrypted
-        zpool create -o ashift=12 \
+        zpool create -o ashift=13 \
             -O acltype=posixacl -O canmount=off -O compression=lz4 \
             -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa \
             -O mountpoint=/ -R /mnt -f \
