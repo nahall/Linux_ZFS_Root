@@ -6,8 +6,7 @@ export NEW_HOSTNAME=mlbry01
 export YOURUSERNAME=hbarta
 export ROOT_POOL_NAME=rpool
 export BOOT_POOL_NAME=bpool
-export ENCRYPT=no
-# export ENCRYPT=yes # must be set
+export ZFS_CRYPT=yes
 
 # Select the type of installation
 export INSTALL_TYPE="whole_disk"|"use_partitions"|"use_pools"
