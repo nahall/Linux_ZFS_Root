@@ -296,10 +296,10 @@ fi
 # 4.7b Install GRUB for UEFI booting
 if [ "\$INSTALL_TYPE" == "whole_disk" ];then
     apt install dosfstools
-    mkdosfs -F 32 -s 1 -n EFI \${EFI_PART}
+    mkdosfs -F 32 -s 1 -n EFI \$EFI_PART
 fi
 mkdir /boot/efi
-echo \${EFI_PART} \
+echo \$EFI_PART \
       /boot/efi vfat nofail,x-systemd.device-timeout=1 0 1 >> /etc/fstab
 mount /boot/efi
 apt install --yes grub-efi-amd64 shim-signed
@@ -314,7 +314,7 @@ done
 set -e
 
 # 4.9 Enable importing bpool
-cat <<EOF >/etc/systemd/system/zfs-import-"\${BOOT_POOL_NAME}".service
+cat <<EOF >/etc/systemd/system/zfs-import-"$BOOT_POOL_NAME".service
 [Unit]
 DefaultDependencies=no
 Before=zfs-import-scan.service
@@ -323,13 +323,13 @@ Before=zfs-import-cache.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/sbin/zpool import -N -o cachefile=none "\${BOOT_POOL_NAME}"
+ExecStart=/sbin/zpool import -N -o cachefile=none "$BOOT_POOL_NAME"
 
 [Install]
 WantedBy=zfs-import.target
 EOF
 
-systemctl enable zfs-import-"\${BOOT_POOL_NAME}".service
+systemctl enable zfs-import-"$BOOT_POOL_NAME".service
 
 # 4.10 Optional (but recommended): Mount a tmpfs to /tmp
 cp /usr/share/systemd/tmp.mount /etc/systemd/system/
@@ -348,7 +348,7 @@ fi
 update-initramfs -u -k all
 
 # 5.3 Workaround GRUB's missing zpool-features support:
-sed -i "s|^GRUB_CMDLINE_LINUX=\"|GRUB_CMDLINE_LINUX=\"root=ZFS=\${ROOT_POOL_NAME}/ROOT/debian |" \
+sed -i "s|^GRUB_CMDLINE_LINUX=\"|GRUB_CMDLINE_LINUX=\"root=ZFS=$ROOT_POOL_NAME/ROOT/debian |" \
         /etc/default/grub
 
 # 5.4 Optional (but highly recommended): Make debugging GRUB easier
@@ -374,12 +374,12 @@ umount /boot/efi
 # Everything else applies to both BIOS and UEFI booting:
 
 
-zfs set mountpoint=legacy "\${BOOT_POOL_NAME}"/BOOT/debian
-echo "\${BOOT_POOL_NAME}"/BOOT/debian /boot zfs \
-    nodev,relatime,x-systemd.requires=zfs-import-${BOOT_POOL_NAME}.service 0 0 >> /etc/fstab
+zfs set mountpoint=legacy "$BOOT_POOL_NAME"/BOOT/debian
+echo "$BOOT_POOL_NAME"/BOOT/debian /boot zfs \
+    nodev,relatime,x-systemd.requires=zfs-import-$BOOT_POOL_NAME.service 0 0 >> /etc/fstab
 
 mkdir /etc/zfs/zfs-list.cache
-touch /etc/zfs/zfs-list.cache/"\${ROOT_POOL_NAME}"
+touch /etc/zfs/zfs-list.cache/"$ROOT_POOL_NAME"
 ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
 
 zed -F &
@@ -387,12 +387,12 @@ ZED_PID=\$!
 
 
 # loop while zed does its thing
-while ! ( [ -f /etc/zfs/zfs-list.cache/"\${ROOT_POOL_NAME}" ] && \
-          [ -s /etc/zfs/zfs-list.cache/"\${ROOT_POOL_NAME}" ] )
+while ! ( [ -f /etc/zfs/zfs-list.cache/"$ROOT_POOL_NAME" ] && \
+          [ -s /etc/zfs/zfs-list.cache/"$ROOT_POOL_NAME" ] )
 do
     sleep 3
     # If it is empty, force a cache update and check again:
-    zfs set canmount=noauto "\${ROOT_POOL_NAME}"/ROOT/debian
+    zfs set canmount=noauto "$ROOT_POOL_NAME"/ROOT/debian
 done
 
 # delay one more time to avoid race condition
@@ -400,11 +400,11 @@ sleep 3
 kill \$ZED_PID
 
 # Fix the paths to eliminate /mnt:
-sed -Ei "s|/mnt/?|/|" /etc/zfs/zfs-list.cache/"\${ROOT_POOL_NAME}"
+sed -Ei "s|/mnt/?|/|" /etc/zfs/zfs-list.cache/"$ROOT_POOL_NAME"
 
 # 6.1 Snapshot the initial installation
-zfs snapshot "\${ROOT_POOL_NAME}"/ROOT/debian@install
-zfs snapshot "\${BOOT_POOL_NAME}"/BOOT/debian@install
+zfs snapshot "$ROOT_POOL_NAME"/ROOT/debian@install
+zfs snapshot "$BOOT_POOL_NAME"/BOOT/debian@install
 
 # 6.2 Exit from the chroot environment back to the LiveCD environment
 exit
